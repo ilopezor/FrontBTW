@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>
+  @if(data.isEditing){
+    Editar Categoria
+  }@else{
+    Nuevo Categoria
+  }
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Nombre de la Categoria</mat-label>
+    <input matInput formControlName="nombreCategoria" />
+  </mat-form-field>
+
+  <mat-checkbox formControlName="estado">Activo</mat-checkbox>
+
+  <div class="actions">
+    <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Guardar</button>
+  </div>
+</form>
