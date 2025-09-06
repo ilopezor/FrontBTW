@@ -1,5 +1,19 @@
 # FrontBTW
 
+  Este proyecto es la continuacion de un back, los cuales hacen parte de una prueba tecnica
+
+##
+  Agunas imagenes del las vistas
+  <img width="1903" height="900" alt="image" src="https://github.com/user-attachments/assets/5fddbce0-b1c3-443c-8384-0f55eaa8c3ff" />
+  <img width="1896" height="903" alt="image" src="https://github.com/user-attachments/assets/638d7b87-9ffa-4461-b367-e36467ee631f" />
+  <img width="1902" height="899" alt="image" src="https://github.com/user-attachments/assets/5a2ff3e1-1b5b-4598-a9a5-5989bdb91edd" />
+  <img width="1902" height="901" alt="image" src="https://github.com/user-attachments/assets/836b055a-e89f-46de-b35d-2b83db78fc4a" />
+
+
+
+
+
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.4.
 
 ## Development server
