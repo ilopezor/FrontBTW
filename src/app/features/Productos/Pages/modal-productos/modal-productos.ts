@@ -11,6 +11,7 @@ import { CategoryModel } from '../../../Categoria/Models/Category.Model';
 import { CategoriaService } from '../../../Categoria/Services/categoria/categoria';
 import { ProductosService } from '../../Services/productos/productos';
 import { ProductosModel } from '../../Models/Productos.Model';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-modal-productos',
@@ -36,6 +37,7 @@ export class ModalProductos {
     private categoriaService: CategoriaService,
     private productosService: ProductosService,
     private dialogRef: MatDialogRef<ModalProductos>,
+    private notifycationService: NotificationService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.buildForm();
@@ -62,11 +64,9 @@ export class ModalProductos {
     this.categoriaService.getAll().subscribe({
       next: (cats) => {
         this.categories = cats.objectResponse ?? [];
-
       },
       error: (err) => {
-        console.error('Error al guardar producto:', err);
-
+        this.notifycationService.error('Ocurrió un error al obtener las categorias.');
       },
     });
   }
@@ -76,6 +76,7 @@ export class ModalProductos {
   }
 
   onSubmit(): void {
+    this.notifycationService.loading();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -92,10 +93,16 @@ export class ModalProductos {
   public createProducto(producto: ProductosModel) {
     this.productosService.createProductos(producto).subscribe({
       next: (res) => {
-        this.dialogRef.close(res);
+        this.notifycationService.close();
+        if(res.operationSuccess){
+          this.notifycationService.success('Producto guardado con exito.');
+          this.dialogRef.close(res);
+        }else{
+          this.notifycationService.error('Ocurrió un error al guardar el producto.');
+        }
       },
       error: (err) => {
-        console.error('Error al guardar producto:', err);
+        this.notifycationService.error('Ocurrió un error al guardar el producto.');
       }
     });
   }
@@ -104,10 +111,11 @@ export class ModalProductos {
     producto.idProducto = this.data.product.idProducto;
     this.productosService.updateProductos(producto).subscribe({
       next: (res) => {
+        this.notifycationService.success('Producto actualizado con exito.');
         this.dialogRef.close(res);
       },
       error: (err) => {
-        console.error('Error al actualizar producto:', err);
+        this.notifycationService.error('Error al actualizar producto.');
       }
     });
   }

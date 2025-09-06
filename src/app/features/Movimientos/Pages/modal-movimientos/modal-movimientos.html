@@ -8,48 +8,57 @@
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
 
- 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Producto</mat-label>
-    <mat-select formControlName="idProducto">
-      @for (prop of products; track prop.idProducto) {
-        <mat-option [value]="prop.idProducto">{{ prop.nombreProducto }}</mat-option>
-      }
-    </mat-select>
+    @if(data.isView){
+      <input matInput [value]="data.movement.producto" disabled/>
+    }@else{
+      <mat-select formControlName="idProducto">
+        @for (prop of products; track prop.idProducto) {
+          <mat-option [value]="prop.idProducto">{{ prop.nombreProducto }}</mat-option>
+        }
+      </mat-select>
+    }
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Tipo Movimiento</mat-label>
-    <mat-select formControlName="idTipoMovimiento">
-      @for (type of tipoMovimientos; track type.idTipoMovimiento) {
-        <mat-option [value]="type.idTipoMovimiento">{{ type.descripcion }}</mat-option>
-      }
-    </mat-select>
+    @if(data.isView){
+      <input matInput [value]="data.movement.tipoMovimiento" disabled/>
+    }@else{
+      <mat-select formControlName="idTipoMovimiento">
+        @for (type of tipoMovimientos; track type.idTipoMovimiento) {
+          <mat-option [value]="type.idTipoMovimiento">{{ type.descripcion }}</mat-option>
+        }
+      </mat-select>
+    }
   </mat-form-field>
 
-   <mat-form-field appearance="outline" class="full-width">
+  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Cantidad productos</mat-label>
-    <input matInput type="number" formControlName="cantidad" />
+    <input matInput type="number" formControlName="cantidad"  />
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Fecha Movimiento</mat-label>
-    <input matInput [matDatepicker]="picker" formControlName="fechaMovimiento" >
+    <input matInput [matDatepicker]="picker" formControlName="fechaMovimiento" />
     <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Comentarios</mat-label>
-    <textarea matInput  formControlName="comentario" rows="3" class="mt-1 block w-full border rounded p-2"></textarea>
+    <textarea matInput formControlName="comentario" rows="3"
+              class="mt-1 block w-full border rounded p-2"
+              ></textarea>
   </mat-form-field>
 
   <div class="actions">
     @if(!data.isView){
-        <button mat-button type="button" (click)="onCancel()">Cancelar</button>
-        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Guardar</button>
+      <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Guardar</button>
     }@else{
-        <button mat-button type="button" color="primary" (click)="onCancel()">Cerrar</button>
+      <button mat-button type="button" color="primary" (click)="onCancel()">Cerrar</button>
     }
   </div>
 </form>

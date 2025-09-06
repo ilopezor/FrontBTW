@@ -11,6 +11,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { noop } from 'rxjs';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-modal-categoria',
@@ -30,16 +32,15 @@ import { MatSelectModule } from '@angular/material/select';
 export class ModalCategoria {
   form: FormGroup = {} as FormGroup;
   categories: CategoryModel[] = [];
-  loading = true;
 
   constructor(
     private fb: FormBuilder,
     private categoriaService: CategoriaService,
-    private dialogRef: MatDialogRef<ModalCategoria>,
+    private dialogRef: MatDialogRef<ModalCategoria>, 
+    private notifycationService: NotificationService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.buildForm();
-    this.getCategories();
     
     if (data.isEditing) {
       this.form.patchValue(data.categoria);
@@ -51,19 +52,6 @@ export class ModalCategoria {
       nombreCategoria: ['', Validators.required],
       estado: [true],
     });
-
-  }
-
-  getCategories() {
-    this.categoriaService.getAll().subscribe({
-      next: (cats: GeneralResponse<CategoryModel[]>) => {
-        this.categories = cats.objectResponse ?? [];
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-      },
-    });
   }
 
   onCancel(): void {
@@ -71,12 +59,13 @@ export class ModalCategoria {
   }
 
   onSubmit(): void {
+    this.notifycationService.loading();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    const nuevaCategoria = this.form.value;
 
+    const nuevaCategoria = this.form.value;
     if (this.data.isEditing) {
       this.updateCategoria(nuevaCategoria);
     } else {
@@ -84,15 +73,20 @@ export class ModalCategoria {
     }
   }
 
-  private createCategoria(categoria: any) {
+  public createCategoria(categoria: any) {
     this.categoriaService.create(categoria).subscribe({
       next: (res: any) => {
-        this.loading = false;
-        this.dialogRef.close(res);
+        this.notifycationService.close();
+          if(res.operationSuccess){  
+            this.dialogRef.close(res);
+            this.notifycationService.success('Categoria guardada con exito.');
+          }else{
+            this.notifycationService.error('Ocurrió un error al guardar la categoria.');
+          }
       },
       error: (err: any) => {
-        this.loading = false;
-        console.error('Error al guardar categoria:', err);
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al guardar la categoria.');
       }
     });
   }
@@ -101,12 +95,17 @@ export class ModalCategoria {
     categoria.idCategoria = this.data.categoria.idCategoria;
     this.categoriaService.update(categoria).subscribe({
       next: (res: any) => {
-        this.loading = false;
-        this.dialogRef.close(res);
+        this.notifycationService.close();
+        if(res.operationSuccess){  
+          this.notifycationService.success('Categoria actualizada con exito.');
+          this.dialogRef.close(res);
+        }else{
+          this.notifycationService.error('Ocurrió un error al actualizar la categoria.');
+        }
       },
       error: (err: any) => {
-        this.loading = false;
-        console.error('Error al actualizar categoria:', err);
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al actualizar la categoria.');
       }
     });
   }

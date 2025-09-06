@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { AfterViewInit, Component, Inject, OnInit } from '@angular/core';
 import {  FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,7 @@ import { TypeMovementsService } from '../../Services/typeMovements/typeMovements
 import { MovimientosModel } from '../../Models/Movimientos.Model';
 import { MovementsService } from '../../Services/movements/movements';
 import {MatDatepickerModule} from '@angular/material/datepicker';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-modal-movimientos',
@@ -32,18 +33,20 @@ import {MatDatepickerModule} from '@angular/material/datepicker';
   templateUrl: './modal-movimientos.html',
   styleUrl: './modal-movimientos.scss'
 })
-export class ModalMovimientos {
+export class ModalMovimientos implements AfterViewInit {
   form: FormGroup = {} as FormGroup;
   categories: CategoryModel[] = [];
   products: ProductosModel[] = [];
   tipoMovimientos: TipoMovimientoModel[] = [];
+
 
   constructor(
     private fb: FormBuilder,
     private productosService: ProductosService,
     private tipoMovimientoService: TypeMovementsService,
     private movimeintosService: MovementsService,
-    private dialogRef: MatDialogRef<ModalMovimientos>,
+    private dialogRef: MatDialogRef<ModalMovimientos>, 
+    private notifycationService: NotificationService,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.buildForm();
@@ -52,8 +55,12 @@ export class ModalMovimientos {
 
     if (data.isView) {
       this.form.patchValue(data.movement);
-      this.form.disable() 
     }
+  }
+  
+  ngAfterViewInit(): void {
+    if (this.data.isView)
+      this.form.disable();
   }
 
   buildForm() {
@@ -67,18 +74,33 @@ export class ModalMovimientos {
   }
 
   getProducts() {
-    this.productosService.getAllProducts().subscribe(response => {
-      if (response.operationSuccess) {
-        this.products = response.objectResponse ?? [];
-        
+    this.notifycationService.loading();
+    this.productosService.getAllProducts().subscribe({
+      next:response => {
+        this.notifycationService.close();
+        if (response.operationSuccess) {
+          this.products = response.objectResponse ?? [];
+        }
+      },
+      error: err => {
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al obtener los productos.');
       }
     });
   }
 
   getTypeMovements() {
-    this.tipoMovimientoService.getTypeMovements().subscribe(response => {
-      if (response.operationSuccess) {
-        this.tipoMovimientos = response.objectResponse ?? [];
+    this.notifycationService.loading();
+    this.tipoMovimientoService.getTypeMovements().subscribe({
+      next: response => {
+        this.notifycationService.close();
+        if (response.operationSuccess) {
+          this.tipoMovimientos = response.objectResponse ?? [];
+        }
+      },
+      error: err => {
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al obtener los tipos de movimientos.');
       }
     });
   }
@@ -88,28 +110,33 @@ export class ModalMovimientos {
   }
 
   onSubmit(): void {
+    this.notifycationService.loading();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     const nuevoMovimiento = this.form.value;
-
-    if (this.data.isEditing) {
-      this.createMovements(nuevoMovimiento);
-    } else {
-      this.createMovements(nuevoMovimiento);
-    }
+    this.createMovements(nuevoMovimiento);
+   
   }
 
   public createMovements(movimiento: MovimientosModel) {
     this.movimeintosService.create(movimiento).subscribe({
       next: (res) => {
-        this.dialogRef.close(res);
+        this.notifycationService.close();
+        if(res.operationSuccess){
+          this.notifycationService.success('Movimiento guardado con exito.');
+          this.dialogRef.close(res);
+        }else{
+          this.notifycationService.error('Ocurrió un error al guardar el movimiento.');
+        }
       },
       error: (err) => {
-        console.error('Error al guardar producto:', err);
-      }
+          this.notifycationService.error('Ocurrió un error al guardar el movimiento.');
+          this.notifycationService.close();}
     });
   }
+
+
 
 }

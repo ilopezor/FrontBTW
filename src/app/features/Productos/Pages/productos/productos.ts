@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { ProductosModel } from '../../Models/Productos.Model';
 import { ProductosService } from '../../Services/productos/productos';
 import { ModalProductos } from '../modal-productos/modal-productos';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-productos',
@@ -36,18 +37,26 @@ export class ProductosComponent {
   displayedColumns: string[] = ['id', 'nombre', 'precio', 'stock', 'categoria', 'acciones'];
   dataSource: MatTableDataSource<ProductosModel>= new MatTableDataSource<ProductosModel>();
 
-  constructor(private productService: ProductosService, public dialog: MatDialog) { 
+  constructor(private productService: ProductosService, public dialog: MatDialog, private notifycationService: NotificationService) { 
     this.loadProducts();
   }
 
 
   loadProducts() {
-    this.productService.getAllProducts().subscribe(response => {
-      if (response.operationSuccess) {
-        this.dataSource.data = response.objectResponse ?? [];
-        this.dataSource.paginator = this.paginator;
+    this.notifycationService.loading();
+    this.productService.getAllProducts().subscribe({
+      next: response => {
+        if (response.operationSuccess) {
+          this.notifycationService.close();
+          this.dataSource.data = response.objectResponse ?? [];
+          this.dataSource.paginator = this.paginator;
+        }
+      },
+      error: err => {
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al cargar los productos.');
       }
-    });
+  });
   }
 
   applyFilter(event: Event) {
@@ -82,13 +91,19 @@ export class ProductosComponent {
     });
   }
 
-  deleteProduct(id: number) {
-    if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      this.productService.deleteProductos(id).subscribe(response => {
-        if (response.operationSuccess) {
-          this.loadProducts();
+  async deleteProduct(id: number) {
+    if (await this.notifycationService.confirm('¿Estás seguro de que deseas eliminar este producto?', 'Confirmar eliminación')) {
+      this.productService.deleteProductos(id).subscribe({
+        next: response => {
+          if (response.operationSuccess) {
+            this.notifycationService.success('Producto eliminado con exito.');
+            this.loadProducts();
+          }
+        },
+        error: err => {
+          this.notifycationService.error('Ocurrió un error al eliminar el producto.');
         }
-      });
+    });
     }
   }
 }

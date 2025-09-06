@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { CategoriaService } from '../../Services/categoria/categoria';
 import { ModalCategoria } from '../modal-categoria/modal-categoria';
 import { CategoryModel } from '../../Models/Category.Model';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-categoria',
@@ -34,7 +35,7 @@ export class Categoria implements OnInit {
   displayedColumns: string[] = ['id', 'nombre', 'acciones'];
   dataSource: MatTableDataSource<CategoryModel> = new MatTableDataSource<CategoryModel>();
 
-  constructor(private categoryService: CategoriaService, public dialog: MatDialog) { 
+  constructor(private categoryService: CategoriaService, public dialog: MatDialog, private notifycationService: NotificationService) { 
   
   }
 
@@ -43,10 +44,20 @@ export class Categoria implements OnInit {
   }
   
   loadCategory() {
-    this.categoryService.getAll().subscribe(response => {
-      if (response.operationSuccess) {
-        this.dataSource.data = response.objectResponse ?? [];
-        this.dataSource.paginator = this.paginator;
+    this.notifycationService.loading();
+    this.categoryService.getAll().subscribe({
+      next: response => {
+        if (response.operationSuccess) {
+            this.notifycationService.close();
+            this.dataSource.data = response.objectResponse ?? [];
+            this.dataSource.paginator = this.paginator;
+        }else{
+            this.notifycationService.error('Ocurrió un error al cargar las categorías.');
+        }
+      },
+      error: err => {
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al cargar las categorías.');
       }
     });
   }
@@ -83,13 +94,20 @@ export class Categoria implements OnInit {
     });
   }
 
-  deleteCategoria(id: number) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta categoria?')) {
-      this.categoryService.deleteProductos(id).subscribe(response => {
-        if (response.operationSuccess) {
-          this.loadCategory();
+  async deleteCategoria(id: number) {
+    if (await this.notifycationService.confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
+      this.categoryService.deleteProductos(id).subscribe({
+        next: response => {
+          if (response.operationSuccess) {
+            this.loadCategory();
+          }else{
+            this.notifycationService.error('Ocurrió un error al eliminar la categoría.');
+          }
+        },
+        error: err => {
+          this.notifycationService.error('Ocurrió un error al eliminar la categoría.');
         }
-      });
+    });
     }
   }
 }

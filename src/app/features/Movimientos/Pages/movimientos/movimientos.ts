@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ModalMovimientos } from '../modal-movimientos/modal-movimientos';
 import { MovementsService } from '../../Services/movements/movements';
 import { MovimientosModel } from '../../Models/Movimientos.Model';
+import { NotificationService } from '../../../../Shared/Service/NotificationService';
 
 @Component({
   selector: 'app-movimientos',
@@ -34,16 +35,24 @@ export class Movimientos {
   displayedColumns: string[] = ['id', 'producto', 'tipoMovimiento', 'cantidad', 'fecha', 'acciones'];
   dataSource: MatTableDataSource<MovimientosModel>= new MatTableDataSource<MovimientosModel>();
 
-  constructor(private movementsService: MovementsService, public dialog: MatDialog) { 
+  constructor(private movementsService: MovementsService, public dialog: MatDialog, private notifycationService: NotificationService) { 
     this.loadMovements();
   }
 
 
   loadMovements() {
-    this.movementsService.getAll().subscribe(response => {
-      if (response.operationSuccess) {
-        this.dataSource.data = response.objectResponse ?? [];
-        this.dataSource.paginator = this.paginator;
+    this.notifycationService.loading();
+    this.movementsService.getAll().subscribe({
+      next: response => {
+        if (response.operationSuccess) {
+          this.notifycationService.close();
+          this.dataSource.data = response.objectResponse ?? [];
+          this.dataSource.paginator = this.paginator;
+        }
+     },
+      error: err => {
+        this.notifycationService.close();
+        this.notifycationService.error('Ocurrió un error al cargar los movimientos.');
       }
     });
   }
@@ -67,8 +76,8 @@ export class Movimientos {
     });
   }
 
-    seeMovements(movement: MovimientosModel) {
-     this.dialog.open(ModalMovimientos, {
+  seeMovements(movement: MovimientosModel) {
+    this.dialog.open(ModalMovimientos, {
       width: '500px',
       maxHeight: '90vh',
       data: { isView: true, movement }
